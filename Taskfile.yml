@@ -1,0 +1,13 @@
+version: '3'
+
+env:
+
+includes:
+
+tasks:
+  echo:
+    cmds:
+      - echo '{{.USER_WORKING_DIR}}'
+  build:
+    cmds:
+      - go build -v -o bin/dp.exe main.go
