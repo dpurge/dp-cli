@@ -2,9 +2,10 @@ name: Build
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+    - 'main'
+    tags:
+    - '*'
 
 jobs:
 
@@ -12,16 +13,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.20'
 
-    - name: Install Task
-      uses: arduino/setup-task@v1
-      with:
-        version: 3.x
+    - run: go mod tidy
+    - run: go test -v ./...
 
-    - name: Build
-      run: task build
+    - uses: goreleaser/goreleaser-action@v2
+      if: success() && equals(github.ref, 'refs/heads/main')
+      with:
+        version: latest
+        args: build --clean --snapshot
+
+    # - name: Install Task
+    #   uses: arduino/setup-task@v1
+    #   with:
+    #     version: 3.x
+
+    # - name: Build
+    #   run: task build
+    #   if: startsWith(github.ref, 'refs/heads/')
