@@ -25,7 +25,7 @@ jobs:
     - run: go test -v ./...
 
     - uses: goreleaser/goreleaser-action@v2
-      if: success() && equals(github.ref, 'refs/heads/main')
+      if: success() && github.ref == 'refs/heads/main'
       with:
         version: latest
         args: build --clean --snapshot
