@@ -8,6 +8,25 @@ tasks:
   echo:
     cmds:
       - echo '{{.USER_WORKING_DIR}}'
+
+  clean:
+    desc: Cleans temp files and folders
+    cmds:
+      - rm -rf bin/
+
   build:
+    deps: [build-linux, build-windows]
+
+  build-linux:
+    cmds:
+      - go build -v -o bin/dp main.go
+    env:
+      GOOS: linux
+      GOARCH: amd64
+      
+  build-windows:
     cmds:
       - go build -v -o bin/dp.exe main.go
+    env:
+      GOOS: windows
+      GOARCH: amd64
