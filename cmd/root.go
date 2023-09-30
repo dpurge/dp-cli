@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +27,5 @@ func Execute() {
 
 func init() {
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dpcli.yaml)")
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-
