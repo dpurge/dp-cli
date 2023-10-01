@@ -3,14 +3,14 @@ package scan
 import (
 	"dpcli/cfg"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 )
 
 func GetPages(directory string, extension string) ([]string, error) {
-	items, err := ioutil.ReadDir(directory)
+	items, err := os.ReadDir(directory)
 	if err != nil {
 		return nil, err
 	}
@@ -18,7 +18,7 @@ func GetPages(directory string, extension string) ([]string, error) {
 	pages := make([]string, 0, len(items))
 
 	for _, item := range items {
-		if item.Mode().IsRegular() && filepath.Ext(item.Name()) == extension {
+		if !item.IsDir() && filepath.Ext(item.Name()) == extension {
 			fullname, err := filepath.Abs(filepath.Join(directory, item.Name()))
 			if err != nil {
 				return nil, err
@@ -28,6 +28,35 @@ func GetPages(directory string, extension string) ([]string, error) {
 	}
 
 	return pages, nil
+}
+
+func CreateBlankPage(size string) (string, error) {
+	magickConvert, err := cfg.GetTool("ImageMagick", "convert")
+	if err != nil {
+		return "", err
+	}
+
+	tmpFile, err := os.CreateTemp(".", "*.png")
+	if err != nil {
+		return "", err
+	}
+	tmpFile.Close()
+
+	blank, err := filepath.Abs(tmpFile.Name())
+	if err != nil {
+		return "", err
+	}
+
+	cmd := exec.Command(magickConvert, "-size", size, "canvas:white", blank)
+	buf, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	if len(buf) > 0 {
+		log.Println(string(buf[:]))
+	}
+
+	return blank, nil
 }
 
 func CreateSignature(name string, signature []string) (string, error) {
@@ -56,8 +85,6 @@ func CreatePdf(name string, pages []string) (string, error) {
 		return "", err
 	}
 
-	// D:\pgm\ImageMagick\convert.exe $printSignature $filename
-
 	magickConvert, err := cfg.GetTool("ImageMagick", "convert")
 	if err != nil {
 		return "", err
@@ -68,7 +95,9 @@ func CreatePdf(name string, pages []string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Println(buf)
+	if len(buf) > 0 {
+		log.Println(string(buf[:]))
+	}
 
 	return filename, nil
 }

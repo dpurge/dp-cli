@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"dpcli/scan"
 
@@ -12,6 +13,7 @@ import (
 var name string
 var directory string
 var extension string
+var leadingBlank int
 
 var printScanCmd = &cobra.Command{
 	Use:   "print-scan",
@@ -29,14 +31,26 @@ Example 2:
 
 	dp print-scan --name=my-book --directory=./testdata --extension=.png`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		blank, err := scan.CreateBlankPage("420x595") // A5 at 72 DPI
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		blanks := make([]string, leadingBlank)
+		for i := 0; i < leadingBlank; i++ {
+			blanks[i] = blank
+		}
+
 		pages, err := scan.GetPages(directory, extension)
 		if err != nil {
 			log.Fatal(err)
 		}
 
+		pages = append(blanks, pages...)
+
 		lenSignature := 32 // 4 pages * 8 sheets
 		lenPages := len(pages)
-		blank := "blank.png"
 
 		signatureNr := 0
 		for i := 0; i < lenPages; i += lenSignature {
@@ -61,7 +75,10 @@ Example 2:
 			log.Println(signatureFile)
 		}
 
-		// delete blank page
+		err = os.Remove(blank)
+		if err != nil {
+			fmt.Println(err)
+		}
 	},
 }
 
@@ -75,4 +92,5 @@ func init() {
 	printScanCmd.MarkFlagRequired("directory")
 
 	printScanCmd.Flags().StringVarP(&extension, "extension", "e", ".png", "set extension for scanned pages")
+	printScanCmd.Flags().IntVarP(&leadingBlank, "leading-blank", "b", 0, "set number of leading blank pages")
 }
